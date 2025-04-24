@@ -1,5 +1,8 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
+import 'package:flutter_gen/gen_l10n/l10n.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:matrix/matrix.dart';
 
@@ -92,6 +95,10 @@ class ImageBubble extends StatelessWidget {
       );
     }
 
+    // Unstable prefix from MSC4193
+    final spoilered =
+        event.content['page.codeberg.everypizza.msc4193.spoiler'] == true;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       spacing: 8,
@@ -112,17 +119,55 @@ class ImageBubble extends StatelessWidget {
             borderRadius: borderRadius,
             child: Hero(
               tag: event.eventId,
-              child: MxcImage(
-                event: event,
-                width: width,
-                height: height,
-                fit: fit,
-                animated: animated,
-                isThumbnail: thumbnailOnly,
-                placeholder: event.messageType == MessageTypes.Sticker
-                    ? null
-                    : _buildPlaceholder,
-              ),
+              child: spoilered
+                  ? Stack(
+                      children: [
+                        ImageFiltered(
+                          imageFilter: ui.ImageFilter.blur(
+                            sigmaX: 10,
+                            sigmaY: 10,
+                          ),
+                          child: MxcImage(
+                            event: event,
+                            width: width,
+                            height: height,
+                            fit: fit,
+                            animated: animated,
+                            isThumbnail: thumbnailOnly,
+                            placeholder:
+                                event.messageType == MessageTypes.Sticker
+                                    ? null
+                                    : _buildPlaceholder,
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            child: Center(
+                              child: Text(
+                                L10n.of(context).spoiler,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : MxcImage(
+                      event: event,
+                      width: width,
+                      height: height,
+                      fit: fit,
+                      animated: animated,
+                      isThumbnail: thumbnailOnly,
+                      placeholder: event.messageType == MessageTypes.Sticker
+                          ? null
+                          : _buildPlaceholder,
+                    ),
             ),
           ),
         ),

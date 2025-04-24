@@ -3122,6 +3122,7 @@
   "version": "Version",
   "website": "Website",
   "compress": "Compress",
+  "spoiler": "Spoiler",
   "boldText": "Bold text",
   "italicText": "Italic text",
   "strikeThrough": "Strikethrough",

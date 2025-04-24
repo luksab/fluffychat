@@ -34,6 +34,7 @@ class SendFileDialog extends StatefulWidget {
 
 class SendFileDialogState extends State<SendFileDialog> {
   bool compress = true;
+  bool spoiler = false;
 
   /// Images smaller than 20kb don't need compression.
   static const int minSizeToCompress = 20 * 1000;
@@ -103,7 +104,11 @@ class SendFileDialogState extends State<SendFileDialog> {
             file,
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
-            extraContent: label.isEmpty ? null : {'body': label},
+            extraContent: {
+              // Unstable prefix from MSC4193
+              "page.codeberg.everypizza.msc4193.spoiler": spoiler,
+              if (label.isNotEmpty) 'body': label,
+            },
           );
         } on MatrixException catch (e) {
           final retryAfterMs = e.retryAfterMs;
@@ -128,7 +133,10 @@ class SendFileDialogState extends State<SendFileDialog> {
             file,
             thumbnail: thumbnail,
             shrinkImageMaxDimension: compress ? 1600 : null,
-            extraContent: label.isEmpty ? null : {'body': label},
+            extraContent: {
+              if (spoiler) "page.codeberg.everypizza.msc4193.spoiler": true,
+              if (label.isNotEmpty) 'body': label,
+            },
           );
         }
       }
@@ -386,6 +394,41 @@ class SendFileDialogState extends State<SendFileDialog> {
                         ),
                       ],
                     ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if ({TargetPlatform.iOS, TargetPlatform.macOS}
+                          .contains(theme.platform))
+                        CupertinoSwitch(
+                          value: spoiler,
+                          onChanged: (v) => setState(() => spoiler = v),
+                        )
+                      else
+                        Switch.adaptive(
+                          value: spoiler,
+                          onChanged: (v) => setState(() => spoiler = v),
+                        ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  L10n.of(context).spoiler,
+                                  style: theme.textTheme.titleMedium,
+                                  textAlign: TextAlign.left,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
